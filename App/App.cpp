@@ -25,8 +25,170 @@ void ocall_print_string(const char *str){
 void ocall_println_string(const char *str){
     cout << str << endl;
 }
-
+uint8_t key[4] = {0xef,0x45,0x3f,0xa6};
 // Application entry
+void stream2hex(const std::string str, std::string& hexstr, bool capital = false)
+{
+    hexstr.resize(str.size() * 2);
+    const size_t a = capital ? 'A' - 1 : 'a' - 1;
+
+    for (size_t i = 0, c = str[0] & 0xFF; i < hexstr.size(); c = str[i / 2] & 0xFF)
+    {
+        hexstr[i++] = c > 0x9F ? (c / 16 - 9) | a : c / 16 | '0';
+        hexstr[i++] = (c & 0xF) > 9 ? (c % 16 - 9) | a : c % 16 | '0';
+    }
+}
+
+// Convert string of hex numbers to its equivalent char-stream
+void hex2stream(const std::string hexstr, std::string& str)
+{
+    str.resize((hexstr.size() + 1) / 2);
+
+    for (size_t i = 0, j = 0; i < str.size(); i++, j++)
+    {
+        str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
+        str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+    }
+}
+
+int updatequery(string input){
+       uint8_t* sql =(uint8_t*) input.c_str();
+       //uint8_t* stringsql= (uint8_t*)calloc(1,500); 
+       uint8_t* encsql=(uint8_t*)calloc(1,500); 
+    encrypp(sql,encsql,key);
+    string encc;
+    encc=(char*)encsql;
+    cout<<encc;
+    return 0;
+}
+
+int insertquery(void){
+    string input;
+     //uint8_t* sql =(uint8_t*) input.c_str();
+       //uint8_t* stringsql= (uint8_t*)calloc(1,500); 
+       //uint8_t* encsql=(uint8_t*)calloc(1,500); 
+       string table;
+       string colum1;
+       string colum2;
+       string value1;
+       string value2;
+    
+       printf("this is a test\n");
+       cout<<"this is a test2 cout\n";
+       cout<<"insert into ";
+       cin>>table;
+       cin.get();
+       std::cout.flush();
+       cout<<"insert into "<<table<<"(";
+       
+       cin>>colum1;
+       cin.get();
+        std::cout.flush();
+        cout<<"insert into "<<table<<"("<<colum1<<",";
+       cin>>colum2;
+       cin.get();
+        std::cout.flush();
+     cout<<"insert into "<<table<<"("<<colum1<<","<<colum2<< ") values (";
+      cin>>value1;
+      cin.get();
+       //std::cout.flush();
+      cout<<"insert into "<<table<<"("<<colum1<<","<<colum2<< ") values ("<<value1<<",";
+     cin>> value2;
+     cin.get();
+    //std::cout.flush();
+     cout<<"insert into "<<table<<"("<<colum1<<","<<colum2<< ") values ("<<value1<<","<<value2<<")";
+       cout<<"\n";
+uint8_t* dtable=(uint8_t*)table.c_str();
+uint8_t* etable=(uint8_t*)calloc(1,500); 
+uint8_t* dcolum1=(uint8_t*)colum1.c_str();
+uint8_t* ecolum1=(uint8_t*)calloc(1,500); 
+uint8_t* dcolum2=(uint8_t*)colum2.c_str();
+uint8_t* ecolum2=(uint8_t*)calloc(1,500); 
+uint8_t* dvalue1=(uint8_t*)value1.c_str();
+uint8_t* evalue1=(uint8_t*)calloc(1,500); 
+uint8_t* dvalue2=(uint8_t*)value2.c_str();
+uint8_t* evalue2=(uint8_t*)calloc(1,500); 
+
+encrypp(dcolum1,ecolum1,key);
+encrypp(dcolum2,ecolum2,key);
+encrypp(dvalue1,evalue1,key);
+encrypp(dvalue2,evalue2,key);
+
+//colum1=(char*)ecolum1;
+//colum2=(char*)ecolum2;
+value1=(char*)evalue1;
+value2=(char*)evalue2;
+
+stream2hex(colum1,colum1);
+stream2hex(colum2,colum2);
+stream2hex(value1,value1);
+stream2hex(value2,value2);
+string ensql;
+ensql="insert into ";
+ensql+=table;
+ensql+="(";
+ensql+=colum1;
+ensql+=",";
+ensql+=colum2;
+ensql+=") values(\'";
+ensql+=value1;
+ensql+="\',\'";
+ensql+=value2;
+ensql+="\')";
+cout<<ensql;
+/**
+ * @brief 
+ * string testtt="6fa0a88854eb95288a040638ec8fe0d6d1f7c11d179ee4863693394bc9d34933";
+hex2stream(testtt,testtt);
+uint8_t* dtest=(uint8_t*)testtt.c_str();
+uint8_t* etest=(uint8_t*)calloc(1,500); 
+decrypp(dtest,etest,key);
+ * 
+ */
+//cout<<etest;
+
+       /**
+        * sqlite execute
+        * 
+        *   ret =  ecall_execute_sql(eid,ensql);
+  if (ret != SGX_SUCCESS) {
+            cerr << "Error: Making an ecall_execute_sql()" << endl;
+            return -1;
+        }
+        * 
+        */
+       return 0;
+       
+
+}
+
+ int testencypt(void){
+     string string0="hello world";
+     stream2hex(string0,string0);
+
+     uint8_t* string1=(uint8_t*)calloc(1,500); 
+     string1=(uint8_t*)string0.c_str();
+     uint8_t* string2=(uint8_t*)calloc(1,500); 
+     encrypp(string1,string2,key);
+     printf("%s\n",string2);
+     string string3=(char*)string2;
+     cout<<string3<<endl;
+     stream2hex(string3,string3);
+     cout<<string3;
+     string string4="4efc5fff9a811249520cf0b94d8fa12c8585986bfb023a04d92e795f7d7c6f0b";
+     hex2stream(string4,string4);
+     uint8_t* string5=(uint8_t*)string4.c_str();
+     uint8_t* string6=(uint8_t*)calloc(1,500); 
+     decrypp(string5,string6,key);
+     printf("\n%s",string6);
+     return 0;
+ }
+sgx_enclave_id_t eid = 0;
+
+int main1(){
+    testencypt();
+    return 0;
+}
 int main(int argc, char *argv[]){
     if ( argc != 2 ){
         cout << "Usage: " << argv[0] << " <database>" << endl;
@@ -34,14 +196,14 @@ int main(int argc, char *argv[]){
     }
     const char* dbname = argv[1];
 
-    sgx_enclave_id_t eid = 0;
+    
     char token_path[MAX_PATH] = {'\0'};
     sgx_launch_token_t token = {0};
     sgx_status_t ret = SGX_ERROR_UNEXPECTED; // status flag for enclave calls
     int updated = 0;
 
 //cout<<encry(enc);
-uint8_t key[4] = {0xef,0x45,0x3f,0xa6};
+
 uint8_t enc[]="dsjifo";
 	 ret = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, &token, &updated, &eid, NULL);
 	uint8_t* dec = (uint8_t*)calloc(1,500); 
@@ -72,18 +234,39 @@ free(decc);
 
     cout << "Enter SQL statement to execute or 'quit' to exit: " << endl;
     string input;
+     printf("hello");
     cout << "> ";
 
     while(getline(cin, input)) {
         if (input == "quit"){
             break;
         }
-        const char* sql = input.c_str();
-        ret =  ecall_execute_sql(eid, sql);
-        if (ret != SGX_SUCCESS) {
+       /*
+       uint8_t* sql =(uint8_t*) input.c_str();
+       //uint8_t* stringsql= (uint8_t*)calloc(1,500); 
+       uint8_t* encsql=(uint8_t*)calloc(1,500); 
+       encrypp(sql,encsql,key);
+       printf("encrypted string: %s",encsql);
+       */
+       if (input == "update"){
+           cout<<'>';
+           getline(cin, input);
+           updatequery(input);
+        }
+        if (input == "insert"){
+           cout<<'>';
+          // getline(cin, input);
+           insertquery();
+        }
+        //ret =  ecall_execute_sql(eid, sql);
+       /**
+        * sqlite execute
+        * if (ret != SGX_SUCCESS) {
             cerr << "Error: Making an ecall_execute_sql()" << endl;
             return -1;
         }
+        * 
+        */
         cout << "> ";
     }
 
@@ -104,3 +287,4 @@ free(decc);
     cout << "Info: SQLite SGX enclave successfully returned." << endl;
     return 0;
 }
+
