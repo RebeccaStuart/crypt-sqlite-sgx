@@ -39,6 +39,11 @@ void ecall_execute_sql(const char *sql){
     }
 }
 
+void ecall_select_bothends(const char* leftend,const char* rightend){
+
+    //return;
+}
+
 void ecall_closedb(){
     sqlite3_close(db);
     ocall_println_string("Enclave: Closed database connection");

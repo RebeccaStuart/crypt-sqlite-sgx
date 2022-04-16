@@ -22,6 +22,7 @@ using namespace std;
 #define MEM_BLOCK_SIZE 1024*8   //1k
 # define MAX_PATH FILENAME_MAX
 # define ENCLAVE_FILENAME "enclave.signed.so"
+sgx_enclave_id_t eid = 0;
 int aes_encrypt(char *key_string,const char *sql,unsigned char *out1){
     AES_KEY  aes;
     int sql_len = strlen(sql);
@@ -331,8 +332,43 @@ stream2hex(value2,value2);
        
 
 }
-
+int seletcrange(void){
+    float max;
+    float min;
+    const char left[100]="\0";
+       const char right[100]="\0";
+       char* key_aes="1234567890";
+    //   sgx_enclave_id_t eid=0;
+    ecall_select_bothends(eid,left,right);
+    return 0;
+}
 int selectquery(void){
+        string table;
+       string colum1;
+       string colum2;
+       char* key_aes="1234567890";
+       cout<<"select ";
+       string input;
+       string query;
+       
+       cin>>input;
+       if(input=="*"){
+           cout<<"select * from ";
+           cin>>table;
+           cin.get();
+           char* dtable=(char*)table.c_str();
+           unsigned char etable[17];
+           aes_encrypt(key_aes,dtable,etable);
+           etable[16]='\0';
+           table=(char*)etable;
+           stream2hex(table,table);
+           query="select * from a"+table;
+           cout<<query;
+           cout<<endl;
+           ecall_execute_sql(eid,query.c_str());
+
+       }
+       
     return 0;
 }
 
@@ -409,7 +445,6 @@ stream2hex(colum2,colum2);
     //return "\0";
 }
 
-sgx_enclave_id_t eid = 0;
 
 
 int main(int argc, char *argv[]){
@@ -460,6 +495,14 @@ int main(int argc, char *argv[]){
      printf("hello");
     cout << "> ";
 
+
+    printf("test for enclave\n");
+    //const char testforselect[2][];
+
+    const char* rightforselect="jisjdfio";
+    const char* leftforselect="jiosdjiosjdfio";
+    ecall_select_bothends(eid,leftforselect,rightforselect);
+    printf("__________________________");
     while(getline(cin, input)) {
         if (input == "quit"){
             break;
@@ -481,6 +524,7 @@ int main(int argc, char *argv[]){
             cout<<'>';
             string ensqll;
             ensqll=createquery();
+            //sqlite3_exec(dbname,ensqll)
             ret=ecall_execute_sql(eid, ensqll.c_str());
             if (ret != SGX_SUCCESS) {
             cerr << "Error: Making an ecall_execute_sql()" << endl;
