@@ -13,7 +13,8 @@
 #include <openssl/hmac.h>
 #include <openssl/buffer.h>
 #include<sqlite3.h>
-
+#include<assert.h>
+#include"rocksdb/db.h"
 //using namespace std;
 using namespace std;
 // #define XDSGX_BLOCK_SIZE  AES_BLOCK_SIZE
@@ -23,6 +24,8 @@ using namespace std;
 # define MAX_PATH FILENAME_MAX
 # define ENCLAVE_FILENAME "enclave.signed.so"
 sgx_enclave_id_t eid = 0;
+
+
 int aes_encrypt(char *key_string,const char *sql,unsigned char *out1){
     AES_KEY  aes;
     int sql_len = strlen(sql);
@@ -126,7 +129,8 @@ unsigned char * TextEncrypt(const unsigned char* enc_key, const unsigned char * 
     // //AES_set_encrypt_key(enc_key, 128, &key);    
     // printf("state.num:%d\n",state.num);
     //Encripta em blocos de 16 bytes e guarda o texto cifrado numa string -> outdata
-    AES_ctr128_encrypt(text, outdata, bytes_read, &key, state.ivec, state.ecount, &state.num);
+    AES_ecb_encrypt(text,outdata,&key,1);
+    //AES_cbc128_encrypt(text, outdata, bytes_read, &key, state.ivec, state.ecount, &state.num);
     printf("soutdata: ");
     for(int i=0; i<bytes_read; i++){
         printf("%02x ", outdata[i]);
@@ -138,7 +142,7 @@ unsigned char * TextEncrypt(const unsigned char* enc_key, const unsigned char * 
     return outdata;
 }
 
-unsigned char * TextDecrypt(const unsigned char* enc_key, unsigned char* cypherText,int bytes_read, uint8_t* ivec)
+unsigned char * TextDecrypt(const unsigned char* enc_key, unsigned char* cypherText,int bytes_read)
 {       
 
     //Inicialização da Chave de encriptação 
@@ -148,7 +152,7 @@ unsigned char * TextDecrypt(const unsigned char* enc_key, unsigned char* cypherT
     //     exit(1);
     // }
 
-    init_ctr(&state, ivec);//Chamada do contador
+    //init_ctr(&state, ivec);//Chamada do contador
     // printf("TextDecrypt state.num=%d,ivec=%d,ecount=%d\n",state.num,state.ivec,state.ecount);
     //memcpy(state.ivec, iv, 16);
     //Encripta em blocos de 16 bytes e escreve o ficheiro output.txt cifrado         
@@ -160,7 +164,8 @@ unsigned char * TextDecrypt(const unsigned char* enc_key, unsigned char* cypherT
     }
     // state.ivec = ecount;
     //memcpy(state.ivec, ecount, 16);
-    AES_ctr128_encrypt(cypherText, outdata, bytes_read, &key, state.ivec, state.ecount, &state.num);
+    AES_ecb_encrypt(cypherText,outdata,&key,0);
+    //AES_ctr128_encrypt(cypherText, outdata, bytes_read, &key, state.ivec, state.ecount, &state.num);
     // printf("decrypt data in TextDecrypt: ");
     // for(int i=0; i<bytes_read; i++){
     //     printf("%c", outdata[i]);
@@ -332,14 +337,10 @@ stream2hex(value2,value2);
        
 
 }
-int seletcrange(void){
-    float max;
-    float min;
-    const char left[100]="\0";
-       const char right[100]="\0";
-       char* key_aes="1234567890";
+int selectrange(float left,float right,string table,string column){
+    
     //   sgx_enclave_id_t eid=0;
-    ecall_select_bothends(eid,left,right);
+   // ecall_select_bothends(eid,left,right);
     return 0;
 }
 int selectquery(void){
@@ -362,16 +363,61 @@ int selectquery(void){
            etable[16]='\0';
            table=(char*)etable;
            stream2hex(table,table);
-           query="select * from a"+table;
-           cout<<query;
-           cout<<endl;
-           ecall_execute_sql(eid,query.c_str());
+           cout<<"select * from a"<<table<<"where ";
+           string allrange;
+           cin>>allrange;
+           cin.get();
+           if(allrange=="all"){
+                query="select * from a"+table;
+                cout<<query;
+                cout<<endl;
+                ecall_execute_sql(eid,query.c_str());
+           }
+           else{
+               cout<<"select * from a"<<table<<" where ";
+                float left;
+                float right;
+                cin>>left;
+                cin.get();
+                cout<<"select * from a"<<table<<" where "<<left<<"<";
+                string rangecolumn;
+                cin>>rangecolumn;
+                cin.get();
+                cout<<"select * from a"<<table<<" where "<<left<<"<"<<rangecolumn<<"<";
+                cin>>right;
+                cin.get();
+                selectrange(left,right,table,rangecolumn);
+           }
+            
+           
 
        }
        
     return 0;
 }
 
+
+
+int aesdec(unsigned char* enc,unsigned char* src){
+
+    return 0;
+}
+int aesenc(unsigned char* src,unsigned char* enc){
+
+
+    return 0;
+}
+
+int createcreate(string table,string column1,string colum2){
+    return 0;
+}
+int insertinsert(string table,string column1,string column2,float value1,float value2){
+    return 0;
+
+}
+int selectselect(string table,string column1,string column2,float min,float max){
+    return 0;
+}
 int dropquery(void){
     return 0;
 }
@@ -445,7 +491,10 @@ stream2hex(colum2,colum2);
     //return "\0";
 }
 
+int main10(){
+    //this main is for test;
 
+}
 
 int main(int argc, char *argv[]){
     if ( argc != 2 ){
@@ -502,7 +551,7 @@ int main(int argc, char *argv[]){
     const char* rightforselect="jisjdfio";
     const char* leftforselect="jiosdjiosjdfio";
     ecall_select_bothends(eid,leftforselect,rightforselect);
-    printf("__________________________");
+    printf("__________________________\n> ");
     while(getline(cin, input)) {
         if (input == "quit"){
             break;
@@ -556,13 +605,20 @@ int main(int argc, char *argv[]){
         }
         else{
             char* key_aes="1234567890";
+            const unsigned char enc_key[17]="1234567812345678";
+            //enc_key[16]='\0';
             int inputlen=strlen(input.c_str());
             unsigned char out1[((inputlen)/16+1)*16+1];
-            
+             unsigned char* ciphersql;
+            ciphersql=TextEncrypt(enc_key,(unsigned char*)input.c_str(),input.length());
             aes_encrypt(key_aes,input.c_str(),out1);
+            //int enclength=strlen(ciphersql);
+             unsigned char* unciphersql=TextDecrypt(enc_key,ciphersql,16);
             out1[((inputlen)/16+1)*16] = '\0';
             //out1[((inputlen-1)/16+1)*16+1]='\0';
             printf("> %s\n",out1);
+            printf("> %s\n",ciphersql);
+            printf(">decrypt %s\n",unciphersql);
             unsigned char out2[(int)(inputlen/16+1)*16];
             aes_decrypt(key_aes,out1,out2);
             //out2[((inputlen-1)/16+1)*16+1]='\0';
