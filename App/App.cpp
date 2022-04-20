@@ -15,6 +15,7 @@
 #include<sqlite3.h>
 #include<assert.h>
 #include"rocksdb/db.h"
+#include<sstream>
 //using namespace std;
 using namespace std;
 // #define XDSGX_BLOCK_SIZE  AES_BLOCK_SIZE
@@ -29,7 +30,7 @@ sgx_enclave_id_t eid = 0;
 int aes_encrypt(char *key_string,const char *sql,unsigned char *out1){
     AES_KEY  aes;
     int sql_len = strlen(sql);
-    printf("sql_len = %d\n", sql_len);
+   // printf("sql_len = %d\n", sql_len);
     int n=sql_len/16;
     if (AES_set_encrypt_key((unsigned char*)key_string, 128, &aes) < 0) {
         fprintf(stderr, "Unable to set encryption key in AES\n");
@@ -50,15 +51,15 @@ int aes_encrypt(char *key_string,const char *sql,unsigned char *out1){
 int aes_decrypt(char *key_string, unsigned char *out1, unsigned char *out2){
     AES_KEY  aes;
     int sql_len = strlen((char *)out1);
-    printf("sql_len = %d\n", sql_len);
+    //printf("sql_len = %d\n", sql_len);
     int n = sql_len/16;
     if (AES_set_decrypt_key((unsigned char*)key_string, 128, &aes) < 0) {
         fprintf(stderr, "Unable to set encryption key in AES\n");
         return 0;
     }
-    for(int m=0;m<=n;m++){
-        AES_decrypt(out1+16*m,out2+16*m,&aes);
-    }
+    
+        AES_decrypt(out1,out2,&aes);
+    
     return 1;
 }
 
@@ -164,7 +165,7 @@ unsigned char * TextDecrypt(const unsigned char* enc_key, unsigned char* cypherT
     }
     // state.ivec = ecount;
     //memcpy(state.ivec, ecount, 16);
-    AES_ecb_encrypt(cypherText,outdata,&key,0);
+    //AES_ecb_encrypt(cypherText,outdata,&key,0);
     //AES_ctr128_encrypt(cypherText, outdata, bytes_read, &key, state.ivec, state.ecount, &state.num);
     // printf("decrypt data in TextDecrypt: ");
     // for(int i=0; i<bytes_read; i++){
@@ -174,7 +175,10 @@ unsigned char * TextDecrypt(const unsigned char* enc_key, unsigned char* cypherT
     fflush(stdin);
     return outdata;
 }
+void encryppp(const char* str){
 
+
+}
 // ocalls for printing string (C++ ocalls)
 void ocall_print_error(const char *str){
     cerr << str << endl;
@@ -397,7 +401,6 @@ int selectquery(void){
 }
 
 
-
 int aesdec(unsigned char* enc,unsigned char* src){
 
     return 0;
@@ -495,14 +498,79 @@ int main10(){
     //this main is for test;
 
 }
+int virtualsgx(string value1){
+    char* key_aess="1234567890";
+    string input=value1;
+    int inputlen=strlen(input.c_str());
+    unsigned char out11[17];
+    aes_encrypt(key_aess,input.c_str(),out11);
+    out11[16] = '\0';
+    unsigned char out22[17];
+    aes_decrypt(key_aess,out11,out22);
+    string output=(char*)out11;
+    
+    return 0;
 
-int main(int argc, char *argv[]){
+};
+string decstring(string value1);
+string virtualsgxmax(string value1,float max){
+    string decvalue1=decstring(value1);
+    stringstream ss;
+    ss<<decvalue1;
+    double test;
+    ss>>test;
+    if(test<max){
+        return decvalue1;
+    }
+    return decvalue1;
+}
+
+string encstring(string value1){
+    char* key_aess="1234567890";
+    string input=value1;
+    int inputlen=strlen(input.c_str());
+    unsigned char out11[17];
+    aes_encrypt(key_aess,input.c_str(),out11);
+    out11[16] = '\0';
+    string output=(char*)out11;
+    stream2hex(output,output);
+    return output;
+}
+
+string decstring(string value1){
+    char* key_aess="1234567890";
+    string input=value1;
+    hex2stream(input,input);
+    int inputlen=strlen(input.c_str());
+    unsigned char out11[17];
+    aes_decrypt(key_aess,(unsigned char*)input.c_str(),out11);
+    out11[16]='\0';
+    string output=(char*)out11;
+    //hex2stream(output,output);
+    return output;
+}
+int main(){
+    string value1="jsodjfisdf";
+    cout<<encstring(value1)<<endl;
+    cout<<decstring(encstring(value1))<<endl;
+    //virtualsgx(1.654,value1);
+    string value2="1.78234";
+    //float(value2)
+    double test;
+    std::stringstream ss;
+    ss<<value2;
+    ss>>test;
+    cout<<test<<endl<<endl;
+    cout<<virtualsgxmax(encstring(value2),2);
+    return 0;
+}
+int main1111(int argc, char *argv[]){
     if ( argc != 2 ){
         cout << "Usage: " << argv[0] << " <database>" << endl;
         return -1;
     }
     const char* dbname = argv[1];
-
+    
     
     char token_path[MAX_PATH] = {'\0'};
     sgx_launch_token_t token = {0};
@@ -531,6 +599,7 @@ int main(int argc, char *argv[]){
     }
     cout << "Info: SQLite SGX enclave successfully created." << endl;
 
+    
 
     // Open SQLite database
     ret = ecall_opendb(eid, dbname);
@@ -543,7 +612,8 @@ int main(int argc, char *argv[]){
     string input;
      printf("hello");
     cout << "> ";
-
+string value1="jsodjfisdf";
+    virtualsgx(value1);
 
     printf("test for enclave\n");
     //const char testforselect[2][];
@@ -604,6 +674,8 @@ int main(int argc, char *argv[]){
             cout<<endl;
         }
         else{
+                
+
             char* key_aes="1234567890";
             const unsigned char enc_key[17]="1234567812345678";
             //enc_key[16]='\0';
