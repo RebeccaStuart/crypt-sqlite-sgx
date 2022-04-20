@@ -513,7 +513,21 @@ int virtualsgx(string value1){
 
 };
 string decstring(string value1);
+void virtualtime(void);
+string virtualsgxmin(string value1,float min){
+    virtualtime();
+    string decvalue1=decstring(value1);
+    stringstream ss;
+    ss<<decvalue1;
+    double test;
+    ss>>test;
+    if(test>min){
+        return value1;
+    }
+    return "null";
+}
 string virtualsgxmax(string value1,float max){
+    virtualtime();
     string decvalue1=decstring(value1);
     stringstream ss;
     ss<<decvalue1;
@@ -522,9 +536,17 @@ string virtualsgxmax(string value1,float max){
     if(test<max){
         return decvalue1;
     }
-    return decvalue1;
+    return "null";
 }
-
+void virtualtime(void){
+    int i=0;
+    while(1){
+        i++;
+        if(i>100)
+            break;
+    }
+    return;
+}
 string encstring(string value1){
     char* key_aess="1234567890";
     string input=value1;
@@ -561,7 +583,7 @@ int main(){
     ss<<value2;
     ss>>test;
     cout<<test<<endl<<endl;
-    cout<<virtualsgxmax(encstring(value2),2);
+    cout<<virtualsgxmax(encstring(value2),1)<<endl;
     return 0;
 }
 int main1111(int argc, char *argv[]){
