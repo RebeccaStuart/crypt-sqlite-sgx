@@ -12,6 +12,7 @@
 #include <openssl/rand.h> 
 #include <openssl/hmac.h>
 #include <openssl/buffer.h>
+#include<openssl/sha.h>
 #include<sqlite3.h>
 #include<assert.h>
 #include"rocksdb/db.h"
@@ -570,6 +571,14 @@ string decstring(string value1){
     string output=(char*)out11;
     //hex2stream(output,output);
     return output;
+}
+string hash1(string value1){
+    //use sha256
+
+    return value1;
+}
+string hash2(string value1){
+    return value1;
 }
 int main(){
     string value1="jsodjfisdf";
