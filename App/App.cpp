@@ -32,17 +32,17 @@ int aes_encrypt(char *key_string,const char *sql,unsigned char *out1){
     AES_KEY  aes;
     int sql_len = strlen(sql);
    // printf("sql_len = %d\n", sql_len);
-    int n=sql_len/16;
+    int n=(sql_len-1)/16+1;
     if (AES_set_encrypt_key((unsigned char*)key_string, 128, &aes) < 0) {
         fprintf(stderr, "Unable to set encryption key in AES\n");
         return 0;
     }
-    unsigned char* tmpe=(unsigned char*)malloc(sizeof(unsigned char)*16*(n+1));
+    unsigned char* tmpe=(unsigned char*)malloc(sizeof(unsigned char)*(16*n+1));
     memcpy(tmpe,sql,sql_len);
-    for(int m=sql_len;m<(n+1)*16;m++){
+    for(int m=sql_len;m<(n*16+1);m++){
         tmpe[m]='\0';
     }
-    for(int m=0;m<=n;m++){
+    for(int m=0;m<n;m++){
         AES_encrypt(tmpe+16*m,out1+16*m,&aes);
     }
     return 1;
@@ -53,13 +53,17 @@ int aes_decrypt(char *key_string, unsigned char *out1, unsigned char *out2){
     AES_KEY  aes;
     int sql_len = strlen((char *)out1);
     //printf("sql_len = %d\n", sql_len);
-    int n = sql_len/16;
+    int n = (sql_len-1)/16+1;
     if (AES_set_decrypt_key((unsigned char*)key_string, 128, &aes) < 0) {
         fprintf(stderr, "Unable to set encryption key in AES\n");
         return 0;
     }
+    for(int m=0;m<n;m++){
+        AES_decrypt(out1+16*m,out2+16*m,&aes);
+
+    }
     
-        AES_decrypt(out1,out2,&aes);
+        
     
     return 1;
 }
@@ -503,6 +507,7 @@ int virtualsgx(string value1){
     char* key_aess="1234567890";
     string input=value1;
     int inputlen=strlen(input.c_str());
+    
     unsigned char out11[17];
     aes_encrypt(key_aess,input.c_str(),out11);
     out11[16] = '\0';
@@ -549,40 +554,116 @@ void virtualtime(void){
     return;
 }
 string encstring(string value1){
-    char* key_aess="1234567890";
+    char* key_aess="1234567812345678s";
     string input=value1;
     int inputlen=strlen(input.c_str());
-    unsigned char out11[17];
+    int n=(inputlen-1)/16+1;
+    unsigned char *out11=(unsigned char*)malloc(sizeof(char)*16*n+1);
     aes_encrypt(key_aess,input.c_str(),out11);
-    out11[16] = '\0';
+    out11[16*n] = '\0';
     string output=(char*)out11;
     stream2hex(output,output);
     return output;
 }
 
 string decstring(string value1){
-    char* key_aess="1234567890";
+    char* key_aess="1234567812345678";
     string input=value1;
     hex2stream(input,input);
     int inputlen=strlen(input.c_str());
-    unsigned char out11[17];
+    int n=(inputlen-1)/16+1;
+    unsigned char *out11=(unsigned char*)malloc(sizeof(char)*16*n+1);
     aes_decrypt(key_aess,(unsigned char*)input.c_str(),out11);
-    out11[16]='\0';
+    out11[16*n]='\0';
     string output=(char*)out11;
     //hex2stream(output,output);
     return output;
 }
+
 string hash1(string value1){
     //use sha256
+    string value=value1+"111";
+    const unsigned char* input= (const unsigned char* )value.c_str();
+    size_t length=value.length();
 
-    return value1;
+    unsigned char md[33];
+    SHA256(input,length,md);
+    string value2;
+    md[32]='\0';
+    value2=(char*)md;
+    stream2hex(value2,value2);
+    return value2;
 }
 string hash2(string value1){
-    return value1;
+    string value=value1+"222";
+    const unsigned char* input= (const unsigned char* )value.c_str();
+    size_t length=value.length();
+    unsigned char md[33];
+    SHA256(input,length,md);
+    string value2;
+    md[32]='\0';
+    value2=(char*)md;
+    stream2hex(value2,value2);
+    return value2;
+}
+string peseudo_permutation_P(string key111,string value1){
+    char* key_aess=(char*)key111.c_str();
+    string input=value1;
+    int inputlen=strlen(input.c_str());
+    int n=(inputlen-1)/16+1;
+    unsigned char *out11=(unsigned char*)malloc(sizeof(char)*16*n+1);
+    aes_encrypt(key_aess,input.c_str(),out11);
+    out11[16*n] = '\0';
+    string output=(char*)out11;
+    stream2hex(output,output);
+    return output;
+}
+string peseudo_inverse_permutation_P(string key111,string value1){
+    char* key_aess=(char*)key111.c_str();
+    //cout<<key111<<endl;
+    //printf("%s\n",key_aess);
+    string input=value1;
+    hex2stream(input,input);
+    int inputlen=strlen(input.c_str());
+    int n=(inputlen-1)/16+1;
+    unsigned char *out11=(unsigned char*)malloc(sizeof(char)*16*n+1);
+    aes_decrypt(key_aess,(unsigned char*)input.c_str(),out11);
+    out11[16*n]='\0';
+    string output=(char*)out11;
+    //hex2stream(output,output);
+    return output;
+}
+string pseudo_F(string key111,string value1){
+    char* key_aess=(char*)key111.c_str();
+    string input=value1;
+    int inputlen=strlen(input.c_str());
+    int n=(inputlen-1)/16+1;
+    unsigned char *out11=(unsigned char*)malloc(sizeof(char)*16*n+1);
+    aes_encrypt(key_aess,input.c_str(),out11);
+    out11[16*n] = '\0';
+    string output=(char*)out11;
+    stream2hex(output,output);
+    return output;
+}
+string pseudo_inverse_F(string key111,string value1){
+    char* key_aess=(char*)key111.c_str();
+    //cout<<key111<<endl;
+    //printf("%s\n",key_aess);
+    string input=value1;
+    hex2stream(input,input);
+    int inputlen=strlen(input.c_str());
+    int n=(inputlen-1)/16+1;
+    unsigned char *out11=(unsigned char*)malloc(sizeof(char)*16*n+1);
+    aes_decrypt(key_aess,(unsigned char*)input.c_str(),out11);
+    out11[16*n]='\0';
+    string output=(char*)out11;
+    //hex2stream(output,output);
+    return output;
 }
 int main(){
-    string value1="jsodjfisdf";
-    cout<<encstring(value1)<<endl;
+    //keep in mind that strlen of key must be 16n ,or not you will face unbelieveable questions;
+    string value1="jsjsjsjsjsdsfsjssjjjjjjjjjjjjjjj";
+    cout<<value1.length()<<":   "<<encstring(value1).length()<<":   "<<encstring(value1)<<endl;
     cout<<decstring(encstring(value1))<<endl;
     //virtualsgx(1.654,value1);
     string value2="1.78234";
@@ -593,6 +674,16 @@ int main(){
     ss>>test;
     cout<<test<<endl<<endl;
     cout<<virtualsgxmax(encstring(value2),1)<<endl;
+    cout<<"test for hash"<<endl;
+    cout<<"length:"<<hash1(value1).length()<<endl<<"value:"<<hash1(value1)<<endl;
+    cout<<"length:"<<hash2(value1).length()<<endl<<"value:"<<hash2(value1)<<endl;
+    cout<<"test for pseu:"<<endl;
+
+    cout<<value1<<endl;
+    string keytest="1234567812345678";
+    cout<<pseudo_F(keytest,value1)<<endl;
+    cout<<pseudo_inverse_F(keytest,pseudo_F(keytest,value1))<<endl;
+
     return 0;
 }
 int main1111(int argc, char *argv[]){
