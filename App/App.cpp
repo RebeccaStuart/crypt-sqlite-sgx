@@ -110,6 +110,7 @@ unsigned char * TextEncrypt(const unsigned char* enc_key, const unsigned char * 
     if (AES_set_encrypt_key(enc_key, 128, &key) < 0)
     {
         fprintf(stderr, "Unable to set encryption key in AES");
+	//fprint(stderr, "Unable to set encryption key in AES");
         exit(1);
     }
 /*    if (AES_set_decrypt_key(enc_key, 128, &dec_key) < 0)
@@ -262,6 +263,7 @@ string insertquery(void){
       cin.get();
        //std::cout.flush();
       cout<<"insert into "<<table<<"("<<colum1<<","<<colum2<< ") values ("<<value1<<",";
+       //std::cout.flush();
      cin>> value2;
      cin.get();
     //std::cout.flush();
